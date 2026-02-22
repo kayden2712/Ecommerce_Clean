@@ -56,6 +56,7 @@ public class OrderServiceImpl implements OrderService {
         List<OrderItem> orderItems = buildOrder(order, cartItems);
         order.setItems(orderItems);
 
+        // Pricing
         BigDecimal totalPrice = orderPricingService.calculateOrderTotal(orderItems);
         order.setTotalPrice(totalPrice);
 
@@ -102,16 +103,19 @@ public class OrderServiceImpl implements OrderService {
 
     // ── Private helpers ──
 
+    // Fetch user by username
     private User getUserByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
     }
 
+    // Fetch cart by user ID
     private Cart getCartByUserId(Long userId) {
         return cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.CART_NOT_FOUND));
     }
 
+    // Fetch cart items
     private List<CartItem> getCartItems(Cart cart) {
         List<CartItem> cartItems = cartItemRepository.findByCartId(cart.getId());
         if (cartItems.isEmpty()) {
@@ -120,6 +124,7 @@ public class OrderServiceImpl implements OrderService {
         return cartItems;
     }
 
+    // Create a new order with PENDING status
     private Order createPendingOrder(User user) {
         Order order = new Order();
         order.setUserId(user.getId());
@@ -128,6 +133,7 @@ public class OrderServiceImpl implements OrderService {
         return order;
     }
 
+    // Build order items from cart items
     private List<OrderItem> buildOrder(Order order, List<CartItem> cartItems) {
         return cartItems.stream()
                 .map(cartItem -> {
@@ -149,17 +155,20 @@ public class OrderServiceImpl implements OrderService {
                 .toList();
     }
 
+    // Validate stock availability
     private void validateStock(Product product, Integer quantity) {
         if (product.getStock() < quantity) {
             throw new InvalidOperationException(ErrorCode.INSUFFICIENT_STOCK);
         }
     }
 
+    // Fetch order by ID
     private Order getOrderById(Long orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ORDER_NOT_FOUND));
     }
 
+    // Restore stock when order is cancelled
     private void restoreStock(Order order) {
         for (OrderItem item : order.getItems()) {
             Product product = productRepository.findById(item.getProductId())

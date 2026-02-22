@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.example.ecommerce_clean.modules.order.domain.entity.OrderItem;
 
+//Logic lien quan đến tiền
 public interface OrderPricingService {
 
     BigDecimal calculateItemTotal(OrderItem orderItem);

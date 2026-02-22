@@ -115,6 +115,7 @@ public class CartServiceImpl implements CartService {
                 .toList();
     }
 
+    // Fetch or create cart for user
     private Cart getOrCreateCart(User user) {
         return cartRepository.findByUserId(user.getId())
                 .orElseGet(() -> {
@@ -124,26 +125,31 @@ public class CartServiceImpl implements CartService {
                 });
     }
 
+    // Fetch product by ID
     private Product getProduct(Long productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
     }
 
+    // Fetch user by username
     private User getUser(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
     }
 
+    // Fetch cart item by cart ID and product ID
     private Optional<CartItem> getCartItemByCartIdAndProductId(Long cartId, Long productId) {
         return cartItemRepository.findByCartIdAndProductId(cartId, productId);
     }
 
+    // Validate quantity
     private void validateQuantity(Integer quantity) {
         if (quantity == null || quantity <= 0) {
             throw new InvalidOperationException(ErrorCode.INVALID_QUANTITY);
         }
     }
 
+    // Validate stock availability
     private void validateStock(Product product, Integer quantity) {
         if (product.getStock() < quantity) {
             throw new InvalidOperationException(ErrorCode.INSUFFICIENT_STOCK);

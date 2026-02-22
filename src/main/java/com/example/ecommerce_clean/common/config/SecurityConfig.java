@@ -16,6 +16,9 @@ import com.example.ecommerce_clean.common.security.JwtFilter;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    /**
+     * @return
+     */
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -24,12 +27,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtFilter jwtFilter) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable())
-                .httpBasic(httpBasic -> httpBasic.disable())
-                .formLogin(formLogin -> formLogin.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .csrf(csrf -> csrf.disable()) // Disable CSRF for stateless APIs
+                .httpBasic(httpBasic -> httpBasic.disable()) // Disable HTTP Basic authentication
+                .formLogin(formLogin -> formLogin.disable()) // Disable form-based login
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session management
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll()) // Temporary: Allow all requests without authentication
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class) // Add JWT filter
                 .build();
     }
 }

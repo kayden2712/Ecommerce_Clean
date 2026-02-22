@@ -34,7 +34,7 @@ public class ProductJpaEntity extends BaseSoftDeleteEntity {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false, precision = 19, scale = 2)
+    @Column(nullable = false, precision = 19, scale = 2) //Chuẩn tiền việt nam với quốc tế
     private BigDecimal price;
 
     @Column(nullable = false)

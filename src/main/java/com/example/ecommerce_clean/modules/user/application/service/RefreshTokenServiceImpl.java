@@ -25,6 +25,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Override
     @Transactional
     public RefreshToken create(User user) {
+        // Xóa refresh token cũ của user (nếu có)
         refreshTokenRepository.deleteByUser(user);
 
         RefreshToken token = new RefreshToken();

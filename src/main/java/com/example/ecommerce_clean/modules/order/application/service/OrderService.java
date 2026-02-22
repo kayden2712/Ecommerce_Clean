@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import com.example.ecommerce_clean.modules.order.application.dto.OrderResponse;
 import com.example.ecommerce_clean.shared.enums.OrderStatus;
 
+//Điều phối các hoạt động liên quan đến đơn hàng
 public interface OrderService {
 
     OrderResponse placeOrder(String username);
