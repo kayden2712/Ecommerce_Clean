@@ -10,11 +10,14 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.example.ecommerce_clean.modules.cart.infrastructure.persistence.entity.CartItemJpaEntity;
+import com.example.ecommerce_clean.modules.cart.infrastructure.persistence.entity.CartJpaEntity;
 
 @Repository
 public interface CartItemJpaRepository extends JpaRepository<CartItemJpaEntity, Long> {
 
     List<CartItemJpaEntity> findByCartId(Long cartId);
+    
+    List<CartItemJpaEntity> findByCart(CartJpaEntity cart);
 
     Optional<CartItemJpaEntity> findByCartIdAndProductId(Long cartId, Long productId);
 

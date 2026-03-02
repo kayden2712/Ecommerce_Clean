@@ -1,16 +1,25 @@
 package com.example.ecommerce_clean.modules.order.infrastructure.persistence.mapper;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.springframework.stereotype.Component;
 
 import com.example.ecommerce_clean.modules.order.domain.entity.OrderItem;
 import com.example.ecommerce_clean.modules.order.infrastructure.persistence.entity.OrderItemJpaEntity;
 
-@Mapper(componentModel = "spring")
-public interface OrderItemPersistenceMapper {
+@Component
+public class OrderItemPersistenceMapper {
 
-    @Mapping(source = "order.id", target = "orderId")
-    @Mapping(source = "product.id", target = "productId")
-    @Mapping(source = "product.name", target = "productName")
-    OrderItem toDomain(OrderItemJpaEntity entity);
+    //  Convert OrderItemJpaEntity to OrderItem domain entity
+    public OrderItem toDomain(OrderItemJpaEntity entity) {
+        if (entity == null) return null;
+
+        return OrderItem.reconstitute(
+                entity.getId(),
+                entity.getProduct().getId(),
+                entity.getProduct().getName(),
+                entity.getQuantity(),
+                entity.getPrice(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt()
+        );
+    }
 }

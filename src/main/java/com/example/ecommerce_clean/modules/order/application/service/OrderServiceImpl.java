@@ -1,6 +1,5 @@
 package com.example.ecommerce_clean.modules.order.application.service;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -40,8 +39,6 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
 
-    private final OrderValidator orderValidator;
-    private final OrderPricingService orderPricingService;
     private final OrderMapper orderMapper;
     private final CartService cartService;
 
@@ -51,16 +48,17 @@ public class OrderServiceImpl implements OrderService {
         Cart cart = getCartByUserId(user.getId());
         List<CartItem> cartItems = getCartItems(cart);
 
-        Order order = createPendingOrder(user);
+        // Create Order using domain entity
+        Order order = Order.create(user.getId(), user.getUsername());
 
-        List<OrderItem> orderItems = buildOrder(order, cartItems);
-        order.setItems(orderItems);
+        // Build and add order items
+        List<OrderItem> orderItems = buildOrderItems(cartItems);
+        order.addItems(orderItems);
 
-        // Pricing
-        BigDecimal totalPrice = orderPricingService.calculateOrderTotal(orderItems);
-        order.setTotalPrice(totalPrice);
-
+        // Save order
         Order savedOrder = orderRepository.save(order);
+
+        // Clear cart after successful order
         cartService.clearCart(username);
 
         return orderMapper.toResponse(savedOrder);
@@ -69,12 +67,19 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void cancelOrder(Long orderId, String username) {
         Order order = getOrderById(orderId);
+        
+        // Validate access rights
         if (!order.getUsername().equals(username)) {
             throw new InvalidOperationException(ErrorCode.ORDER_ACCESS_DENIED);
         }
-        orderValidator.validateCancel(order);
+        
+        // Use domain logic to cancel (handles state validation)
+        order.cancel("Cancelled by user", username);
+        
+        // Restore stock before persisting
         restoreStock(order);
-        order.setStatus(OrderStatus.CANCELLED);
+        
+        // Save the cancelled order
         orderRepository.save(order);
     }
 
@@ -101,8 +106,6 @@ public class OrderServiceImpl implements OrderService {
         return orders.map(orderMapper::toResponse);
     }
 
-    // ── Private helpers ──
-
     // Fetch user by username
     private User getUserByUsername(String username) {
         return userRepository.findByUsername(username)
@@ -124,32 +127,27 @@ public class OrderServiceImpl implements OrderService {
         return cartItems;
     }
 
-    // Create a new order with PENDING status
-    private Order createPendingOrder(User user) {
-        Order order = new Order();
-        order.setUserId(user.getId());
-        order.setUsername(user.getUsername());
-        order.setStatus(OrderStatus.PENDING);
-        return order;
-    }
-
     // Build order items from cart items
-    private List<OrderItem> buildOrder(Order order, List<CartItem> cartItems) {
+    private List<OrderItem> buildOrderItems(List<CartItem> cartItems) {
         return cartItems.stream()
                 .map(cartItem -> {
                     Product product = productRepository.findById(cartItem.getProductId())
                             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
                     int quantity = cartItem.getQuantity();
                     validateStock(product, quantity);
+                    
+                    // Create OrderItem using factory method (domain logic)
+                    OrderItem orderItem = OrderItem.create(
+                            product.getId(),
+                            product.getName(),
+                            quantity,
+                            product.getPrice().amount() // Extract BigDecimal from Money
+                    );
+                    
+                    // Update stock
                     product.setStock(product.getStock() - quantity);
                     productRepository.save(product);
-
-                    OrderItem orderItem = new OrderItem();
-                    orderItem.setProductId(product.getId());
-                    orderItem.setProductName(product.getName());
-                    orderItem.setQuantity(quantity);
-                    orderItem.setPrice(product.getPrice());
-                    orderItem.setTotalPrice(orderPricingService.calculateItemTotal(orderItem));
+                    
                     return orderItem;
                 })
                 .toList();

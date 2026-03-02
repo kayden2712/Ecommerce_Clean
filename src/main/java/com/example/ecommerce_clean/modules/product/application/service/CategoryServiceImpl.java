@@ -46,7 +46,7 @@ public class CategoryServiceImpl implements CategoryService {
         if (repository.existsByName(request.name())) {
             throw new DuplicateResourceException(ErrorCode.CATEGORY_ALREADY_EXISTS);
         }
-        categoryMapper.updateEntity(request, category);
+        category.updateName(request.name());
         return categoryMapper.toResponse(repository.save(category));
     }
 

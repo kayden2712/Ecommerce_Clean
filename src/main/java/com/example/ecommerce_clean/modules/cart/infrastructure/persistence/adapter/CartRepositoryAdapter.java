@@ -24,7 +24,8 @@ public class CartRepositoryAdapter implements CartRepository {
 
     @Override
     public Optional<Cart> findById(Long id) {
-        return jpaRepository.findById(id).map(mapper::toDomain);
+        return jpaRepository.findById(id)
+                .map(mapper::toDomain);
     }
 
     @Override
@@ -36,12 +37,21 @@ public class CartRepositoryAdapter implements CartRepository {
 
     @Override
     public Cart save(Cart cart) {
-        CartJpaEntity entity = mapper.toJpaEntity(cart);
+        // Find existing entity if cart has ID
+        CartJpaEntity existingEntity = null;
+        if (cart.getId() != null) {
+            existingEntity = jpaRepository.findById(cart.getId()).orElse(null);
+        }
+        
+        CartJpaEntity entity = mapper.toJpaEntity(cart, existingEntity);
+        
         if (entity.getUser() == null && cart.getUserId() != null) {
             UserJpaEntity user = userJpaRepository.findById(cart.getUserId()).orElse(null);
             entity.setUser(user);
         }
-        return mapper.toDomain(jpaRepository.save(entity));
+        
+        CartJpaEntity savedEntity = jpaRepository.save(entity);
+        return mapper.toDomain(savedEntity);
     }
 
     @Override

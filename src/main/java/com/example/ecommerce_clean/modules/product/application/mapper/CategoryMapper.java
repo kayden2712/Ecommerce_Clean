@@ -1,29 +1,36 @@
 package com.example.ecommerce_clean.modules.product.application.mapper;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
+import org.springframework.stereotype.Component;
 
 import com.example.ecommerce_clean.modules.product.application.dto.CategoryRequest;
 import com.example.ecommerce_clean.modules.product.application.dto.CategoryResponse;
 import com.example.ecommerce_clean.modules.product.domain.entity.Category;
 
-@Mapper(componentModel = "spring")
-public interface CategoryMapper {
+@Component
+public class CategoryMapper {
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    Category toEntity(CategoryRequest request);
+    public Category toEntity(CategoryRequest request) {
+        if (request == null) return null;
+        return Category.create(request.name());
+    }
 
-    CategoryResponse toResponse(Category category);
+    public CategoryResponse toResponse(Category category) {
+        if (category == null) return null;
+        
+        return new CategoryResponse(
+            category.getId(),
+            category.getName()
+        );
+    }
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    void updateEntity(CategoryRequest request, @MappingTarget Category category);
-
-    List<CategoryResponse> toResponseList(List<Category> categories);
+    public List<CategoryResponse> toResponseList(List<Category> categories) {
+        if (categories == null) return null;
+        
+        return categories.stream()
+            .map(this::toResponse)
+            .collect(Collectors.toList());
+    }
 }

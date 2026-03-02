@@ -1,13 +1,12 @@
 package com.example.ecommerce_clean.modules.user.application.model;
 
-import java.util.Collection;
-import java.util.List;
-
+import com.example.ecommerce_clean.modules.user.domain.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.example.ecommerce_clean.modules.user.domain.entity.User;
+import java.util.Collection;
+import java.util.Collections;
 
 public class CustomerUserDetails implements UserDetails {
 
@@ -17,9 +16,13 @@ public class CustomerUserDetails implements UserDetails {
         this.user = user;
     }
 
+    public User getUser() {
+        return user;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
     }
 
     @Override
@@ -49,6 +52,6 @@ public class CustomerUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return !user.isDeleted();
     }
 }

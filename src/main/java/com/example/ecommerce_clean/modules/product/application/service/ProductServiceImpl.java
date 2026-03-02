@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.ecommerce_clean.common.exception.domain.InvalidOperationException;
 import com.example.ecommerce_clean.common.exception.domain.ResourceNotFoundException;
 import com.example.ecommerce_clean.modules.product.application.dto.CreateProductRequest;
 import com.example.ecommerce_clean.modules.product.application.dto.ProductResponse;
@@ -31,18 +30,35 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductResponse createProduct(CreateProductRequest request) {
         Category category = getCategoryEntityById(request.categoryId());
-        Product product = productMapper.toEntity(request);
-        product.setCategory(category);
-        return productMapper.toResponse(repository.save(product));
+        
+        Product product = Product.create(
+            request.name(),
+            request.price(),
+            request.stock(),
+            request.color(),
+            category
+        );
+        
+        Product savedProduct = repository.save(product);
+        return productMapper.toResponse(savedProduct);
     }
 
     @Override
     public ProductResponse updateProduct(Long productId, UpdateProductRequest request) {
         Product product = getProductEntityById(productId);
-        productMapper.updateEntity(request, product);
         Category category = getCategoryEntityById(request.categoryId());
-        product.setCategory(category);
-        return productMapper.toResponse(repository.save(product));
+        
+        // Business logic in domain
+        product.updateInformation(
+            request.name(),
+            request.price(),
+            request.stock(),
+            request.color(),
+            category
+        );
+        
+        Product savedProduct = repository.save(product);
+        return productMapper.toResponse(savedProduct);
     }
 
     @Override
@@ -54,7 +70,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public List<ProductResponse> getAllProducts() {
-        return repository.findAll().stream().map(productMapper::toResponse).toList();
+        return repository.findAll().stream()
+            .map(productMapper::toResponse)
+            .toList();
     }
 
     @Override
@@ -66,19 +84,24 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void increaseProductStock(Long productId, int stock) {
         Product product = getProductEntityById(productId);
-        product.setStock(product.getStock() + stock);
+        
+        // Business logic in domain
+        product.increaseStock(stock);
+        
         repository.save(product);
     }
 
     @Override
     public void decreaseProductStock(Long productId, int stock) {
         Product product = getProductEntityById(productId);
-        if (product.getStock() < stock) {
-            throw new InvalidOperationException(ErrorCode.INSUFFICIENT_STOCK);
-        }
-        product.setStock(product.getStock() - stock);
+        
+        // Business logic in domain (with validation)
+        product.decreaseStock(stock);
+        
         repository.save(product);
     }
+
+    // ==================== Helper Methods ====================
 
     private Category getCategoryEntityById(Long categoryId) {
         return categoryRepository.findById(categoryId)

@@ -1,17 +1,22 @@
 package com.example.ecommerce_clean.modules.cart.infrastructure.persistence.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import com.example.ecommerce_clean.modules.user.infrastructure.persistence.entity.UserJpaEntity;
 import com.example.ecommerce_clean.shared.domain.entity.BaseSoftDeleteEntity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -32,4 +37,7 @@ public class CartJpaEntity extends BaseSoftDeleteEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private UserJpaEntity user;
+    
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CartItemJpaEntity> items = new ArrayList<>();
 }

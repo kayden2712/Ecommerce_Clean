@@ -1,19 +1,45 @@
 package com.example.ecommerce_clean.modules.order.infrastructure.persistence.mapper;
 
-import java.util.List;
-
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.springframework.stereotype.Component;
 
 import com.example.ecommerce_clean.modules.order.domain.entity.Order;
+import com.example.ecommerce_clean.modules.order.domain.entity.OrderItem;
+import com.example.ecommerce_clean.modules.order.infrastructure.persistence.entity.OrderItemJpaEntity;
 import com.example.ecommerce_clean.modules.order.infrastructure.persistence.entity.OrderJpaEntity;
 
-@Mapper(componentModel = "spring", uses = OrderItemPersistenceMapper.class)
-public interface OrderPersistenceMapper {
+import lombok.RequiredArgsConstructor;
 
-    @Mapping(source = "user.id", target = "userId")
-    @Mapping(source = "user.username", target = "username")
-    Order toDomain(OrderJpaEntity entity);
+@Component
+@RequiredArgsConstructor
+public class OrderPersistenceMapper {
 
-    List<Order> toDomainList(List<OrderJpaEntity> entities);
+    // Convert OrderJpaEntity to Order domain entity.
+    public Order toDomain(OrderJpaEntity entity) {
+        if (entity == null)
+            return null;
+
+        return Order.reconstitute(
+                entity.getId(),
+                entity.getUser().getId(),
+                entity.getUser().getUsername(),
+                entity.getStatus(),
+                entity.getItems().stream().map(this::toItemDomain).toList(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt());
+    }
+
+    // Convert OrderItemJpaEntity to OrderItem domain entity.
+    private OrderItem toItemDomain(OrderItemJpaEntity entity) {
+        if (entity == null)
+            return null;
+
+        return OrderItem.reconstitute(
+                entity.getId(),
+                entity.getProduct().getId(),
+                entity.getProduct().getName(),
+                entity.getQuantity(),
+                entity.getPrice(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt());
+    }
 }

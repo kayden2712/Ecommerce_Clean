@@ -1,23 +1,41 @@
 package com.example.ecommerce_clean.modules.cart.infrastructure.persistence.mapper;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.springframework.stereotype.Component;
 
 import com.example.ecommerce_clean.modules.cart.domain.entity.CartItem;
 import com.example.ecommerce_clean.modules.cart.infrastructure.persistence.entity.CartItemJpaEntity;
 
-@Mapper(componentModel = "spring")
-public interface CartItemPersistenceMapper {
+@Component
+public class CartItemPersistenceMapper {
 
-    @Mapping(source = "cart.id", target = "cartId")
-    @Mapping(source = "product.id", target = "productId")
-    @Mapping(source = "product.name", target = "productName")
-    @Mapping(source = "product.price", target = "productPrice")
-    @Mapping(source = "product.color", target = "productColor")
-    @Mapping(source = "product.stock", target = "productStock")
-    CartItem toDomain(CartItemJpaEntity entity);
+    // Convert CartItemJpaEntity to CartItem domain entity
+    public CartItem toDomain(CartItemJpaEntity entity) {
+        if (entity == null)
+            return null;
 
-    List<CartItem> toDomainList(List<CartItemJpaEntity> entities);
+        return CartItem.reconstitute(
+                entity.getId(),
+                entity.getProduct().getId(),
+                entity.getProduct().getName(),
+                entity.getProduct().getPrice(),
+                entity.getProduct().getColor(),
+                entity.getQuantity(),
+                entity.getSelectedColor(),
+                entity.getProduct().getStock(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt());
+    }
+
+    // Convert list of CartItemJpaEntity to list of CartItem domain entities
+    public List<CartItem> toDomainList(List<CartItemJpaEntity> entities) {
+        if (entities == null)
+            return null;
+
+        return entities.stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
 }
