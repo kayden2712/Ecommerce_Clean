@@ -7,4 +7,8 @@ public class InvalidOperationException extends BusinessException {
     public InvalidOperationException(ErrorCode errorCode) {
         super(errorCode);
     }
+    
+    public InvalidOperationException(ErrorCode errorCode, String customMessage) {
+        super(errorCode, customMessage);
+    }
 }
