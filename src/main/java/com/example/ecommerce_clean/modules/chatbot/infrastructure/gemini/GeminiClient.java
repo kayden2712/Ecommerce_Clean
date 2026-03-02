@@ -56,8 +56,8 @@ public class GeminiClient implements ChatbotPort {
 
         List<Content> contents = history.stream()
                 .map(msg -> Content.of(
-                        msg.getMessageType() == MessageType.USER ? "user" : "model",
-                        msg.getContent()
+                        msg.messageType() == MessageType.USER ? "user" : "model",
+                        msg.content()
                 ))
                 .toList();
 

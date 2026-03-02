@@ -10,8 +10,8 @@ import lombok.Getter;
 @Getter
 public class ChatSession {
     private Long id;
-    private Long userId;
-    private List<ChatMessage> messages = new ArrayList<>();
+    private final Long userId;
+    private final List<ChatMessage> messages = new ArrayList<>();
     private SessionStatus status = SessionStatus.ACTIVE;
 
     public ChatSession(Long userId) {
