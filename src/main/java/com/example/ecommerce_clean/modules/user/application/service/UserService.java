@@ -12,4 +12,6 @@ public interface UserService {
     void changeEmail(Long id, String email);
 
     User findByUsername(String username);
+
+    void changeName(Long id, String newName);
 }

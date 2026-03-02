@@ -31,18 +31,38 @@ public class UserServiceImpl implements UserService {
     @Override
     public void changePassword(Long id, String newPass) {
         User user = getUserEntity(id);
-        user.setPassword(encoder.encode(newPass));
+        
+        // Validate raw password in domain
+        User.validateRawPassword(newPass);
+        
+        // Business logic in domain
+        user.updatePassword(encoder.encode(newPass));
+        
         repository.save(user);
     }
 
     @Override
     public void changeEmail(Long id, String newEmail) {
+        validateEmailUniqueness(newEmail);
+        
         User user = getUserEntity(id);
-        validateEmail(newEmail);
-        user.setEmail(newEmail);
+        
+        // Business logic in domain
+        user.updateEmail(newEmail);
+        
         repository.save(user);
     }
 
+    @Override
+    public void changeName(Long id, String newName) {
+        User user = getUserEntity(id);
+        
+        // Business logic in domain
+        user.updateProfile(newName);
+        
+        repository.save(user);
+    }
+    
     @Override
     public User findByUsername(String username) {
         return repository.findByUsername(username)
@@ -54,7 +74,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
     }
 
-    private void validateEmail(String email) {
+    private void validateEmailUniqueness(String email) {
         if (repository.existsByEmail(email)) {
             throw new DuplicateResourceException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }

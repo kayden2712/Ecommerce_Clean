@@ -49,6 +49,11 @@ public enum ErrorCode {
     PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "Payment not found"),
     PAYMENT_FAILED(HttpStatus.BAD_REQUEST, "Payment failed"),
 
+    // General
+    INVALID_INPUT(HttpStatus.BAD_REQUEST, "Invalid input provided"),
+    INVALID_OPERATION(HttpStatus.BAD_REQUEST, "Invalid operation"),
+    RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "Resource not found"),
+
     // System
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
 

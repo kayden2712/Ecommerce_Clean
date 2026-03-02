@@ -1,5 +1,12 @@
 package com.example.ecommerce_clean.modules.user.application.service;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import com.example.ecommerce_clean.common.exception.domain.DuplicateResourceException;
+import com.example.ecommerce_clean.common.exception.domain.ResourceNotFoundException;
+import com.example.ecommerce_clean.common.exception.security.UnauthorizedException;
+import com.example.ecommerce_clean.common.security.JwtUtil;
 import com.example.ecommerce_clean.modules.user.application.dto.AuthResponse;
 import com.example.ecommerce_clean.modules.user.application.dto.LoginRequest;
 import com.example.ecommerce_clean.modules.user.application.dto.RegisterRequest;
@@ -7,14 +14,6 @@ import com.example.ecommerce_clean.modules.user.domain.entity.RefreshToken;
 import com.example.ecommerce_clean.modules.user.domain.entity.User;
 import com.example.ecommerce_clean.modules.user.domain.repository.UserRepository;
 import com.example.ecommerce_clean.shared.enums.ErrorCode;
-import com.example.ecommerce_clean.shared.enums.Role;
-import com.example.ecommerce_clean.common.exception.domain.DuplicateResourceException;
-import com.example.ecommerce_clean.common.exception.domain.InvalidOperationException;
-import com.example.ecommerce_clean.common.exception.domain.ResourceNotFoundException;
-import com.example.ecommerce_clean.common.exception.security.UnauthorizedException;
-import com.example.ecommerce_clean.common.security.JwtUtil;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,16 +28,21 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void register(RegisterRequest request) {
-        validateNotEmail(request.email());
-        validateUsername(request.username());
-        validatePassword(request.password());
-
-        User user = new User();
-        user.setUsername(request.username());
-        user.setFullName(request.fullName());
-        user.setEmail(request.email());
-        user.setPassword(passwordEncoder.encode(request.password()));
-        user.setRole(Role.USER);
+        // Check uniqueness (repository concerns)
+        validateEmailUniqueness(request.email());
+        validateUsernameUniqueness(request.username());
+        
+        // Validate password before hashing (domain logic)
+        User.validateRawPassword(request.password());
+        
+        // Create user with factory method
+        User user = User.create(
+            request.email(),
+            request.username(),
+            passwordEncoder.encode(request.password()),
+            request.fullName()
+        );
+        
         repository.save(user);
     }
 
@@ -75,21 +79,15 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
     }
 
-    private void validateNotEmail(String email) {
+    private void validateEmailUniqueness(String email) {
         if (repository.existsByEmail(email)) {
             throw new DuplicateResourceException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
     }
 
-    private void validateUsername(String username) {
+    private void validateUsernameUniqueness(String username) {
         if (repository.existsByUsername(username)) {
             throw new DuplicateResourceException(ErrorCode.USERNAME_ALREADY_EXISTS);
-        }
-    }
-
-    private void validatePassword(String password) {
-        if (password == null || password.length() < 8) {
-            throw new InvalidOperationException(ErrorCode.PASSWORD_TOO_SHORT);
         }
     }
 }
