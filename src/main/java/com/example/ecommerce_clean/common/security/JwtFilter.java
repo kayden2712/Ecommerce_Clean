@@ -2,12 +2,13 @@ package com.example.ecommerce_clean.common.security;
 
 import java.io.IOException;
 
-import com.example.ecommerce_clean.modules.user.application.service.CustomUserDetailsService;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.example.ecommerce_clean.modules.user.application.service.CustomUserDetailsService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -19,10 +20,12 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
+    private final CookieUtil cookieUtil;
 
-    public JwtFilter(JwtUtil jwtUtil, CustomUserDetailsService userDetailsService) {
+    public JwtFilter(JwtUtil jwtUtil, CustomUserDetailsService userDetailsService, CookieUtil cookieUtil) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
+        this.cookieUtil = cookieUtil;
     }
 
     @Override
@@ -34,9 +37,16 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        String token = null;
         String header = request.getHeader("Authorization");
+
         if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
+            token = header.substring(7);
+        } else {
+            token = cookieUtil.getAccessToken(request).orElse(null);
+        }
+
+        if (token != null) {
             try {
                 String username = jwtUtil.extractUsername(token);
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -51,6 +61,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 // Token invalid, continue without authentication
             }
         }
+
         filterChain.doFilter(request, response);
     }
 }
